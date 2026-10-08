@@ -26,7 +26,7 @@ const KEEP_NEW_MS = 60 * 60 * 1000;
  * 保存するファイルの名前を作る。例: img-tmgj3k2a1-<ID>.webp
  * 「t」に続く部分が作成時刻で、掃除のときに新しいファイルを見分けるのに使う。
  */
-function fileName(kind: 'img' | 'audio', ext: string): string {
+export function fileName(kind: 'img' | 'audio', ext: string): string {
   return `${kind}-t${Date.now().toString(36)}-${newId()}.${ext}`;
 }
 

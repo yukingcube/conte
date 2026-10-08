@@ -31,6 +31,8 @@ const PATHS: Record<string, ReactNode> = {
   wave: <path d="M4 10 V14 M8 6 V18 M12 9 V15 M16 4 V20 M20 10 V14" />,
   trash: <path d="M5 7 H19 M9 7 V4 H15 V7 M7 7 L8 20 H16 L17 7 M10 11 V16 M14 11 V16" />,
   close: <path d="M6 6 L18 18 M18 6 L6 18" />,
+  download: <path d="M12 4 V15 M8 11 L12 15 L16 11 M5 20 H19" />,
+  upload: <path d="M12 15 V4 M8 8 L12 4 L16 8 M5 20 H19" />,
 };
 
 const FILLED: Record<string, ReactNode> = {

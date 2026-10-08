@@ -15,6 +15,7 @@ import {
   undo,
 } from '../state/actions';
 import { isUnsaved } from '../state/saver';
+import { exportCurrentProject } from '../state/transfer';
 import { togglePlay } from '../state/player';
 import { Icon } from '../components/Icon';
 import { Monitor } from '../components/Monitor';
@@ -75,6 +76,14 @@ function Header({ user }: { user: UserInfo }) {
           <span className="save-dot" />
           <span>{SAVE_TEXT[saveState]}</span>
         </div>
+        <button
+          className="btn small"
+          title="音源と画像も含めた編集データを、1つのファイルに書き出す"
+          onClick={() => void exportCurrentProject()}
+        >
+          <Icon name="download" size={18} />
+          書き出す
+        </button>
         <UserBadge user={user} />
       </div>
     </header>
