@@ -36,6 +36,7 @@ import {
   addCutAtEnd,
   addImage,
   commitBoard,
+  deleteSelectedItem,
   importAudio,
   redo,
   stepCut,
@@ -59,6 +60,7 @@ function Toolbar() {
   const showMargin = useEditor((s) => s.showMargin);
   const canUndo = useEditor((s) => s.undoStack.length > 0);
   const canRedo = useEditor((s) => s.redoStack.length > 0);
+  const hasSelection = useEditor((s) => s.selectedItemId !== null && !s.playing);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const tools: { id: Tool; label: string; icon: string }[] = [
@@ -119,6 +121,15 @@ function Toolbar() {
         onClick={redo}
       >
         <Icon name="redo" size={22} />
+      </button>
+      <button
+        className="icon-btn"
+        aria-label="選択中のものを消す（Delete）"
+        title="選択中のものを消す（Delete）"
+        disabled={!hasSelection}
+        onClick={deleteSelectedItem}
+      >
+        <Icon name="trash" size={22} />
       </button>
       <div className="sep" />
       {PEN_COLORS.map((c, i) => (

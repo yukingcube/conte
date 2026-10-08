@@ -166,6 +166,22 @@ export const supabaseStore: DataStore = {
     return data;
   },
 
+  async listFiles(projectId: string): Promise<string[]> {
+    const out: string[] = [];
+    const page = 1000;
+    // 1回で取れる数に上限があるので、なくなるまで続きを取る
+    for (let offset = 0; offset < 20000; offset += page) {
+      const { data, error } = await supabase()
+        .storage.from(BUCKET)
+        .list(projectId, { limit: page, offset });
+      if (error) fail('ファイル一覧の取得', error.message);
+      const rows = data ?? [];
+      for (const f of rows) out.push(`${projectId}/${f.name}`);
+      if (rows.length < page) break;
+    }
+    return out;
+  },
+
   async removeFiles(paths: string[]): Promise<void> {
     if (paths.length === 0) return;
     await supabase().storage.from(BUCKET).remove(paths);

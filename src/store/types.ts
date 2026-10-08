@@ -24,5 +24,7 @@ export interface DataStore {
   /** ファイルを保存し、取り出すときに使う場所（path）を返す */
   uploadFile(projectId: string, name: string, blob: Blob): Promise<string>;
   downloadFile(path: string): Promise<Blob>;
+  /** そのコンテのファイルの場所（path）をすべて返す */
+  listFiles(projectId: string): Promise<string[]>;
   removeFiles(paths: string[]): Promise<void>;
 }

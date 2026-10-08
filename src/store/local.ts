@@ -133,6 +133,11 @@ export const localStore: DataStore = {
     return blob;
   },
 
+  async listFiles(projectId: string): Promise<string[]> {
+    const keys = await (await db()).getAllKeys('files');
+    return keys.filter((k): k is string => typeof k === 'string' && k.startsWith(`${projectId}/`));
+  },
+
   async removeFiles(paths: string[]): Promise<void> {
     const tx = (await db()).transaction('files', 'readwrite');
     for (const p of paths) void tx.store.delete(p);

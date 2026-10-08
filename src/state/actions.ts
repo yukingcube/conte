@@ -19,6 +19,50 @@ import { pause, seek, setAudioSrc } from './player';
 
 const HISTORY_LIMIT = 100;
 
+/** この時間より新しいファイルは掃除しない（貼った直後でまだ保存されていない画像を守るため） */
+const KEEP_NEW_MS = 60 * 60 * 1000;
+
+/**
+ * 保存するファイルの名前を作る。例: img-tmgj3k2a1-<ID>.webp
+ * 「t」に続く部分が作成時刻で、掃除のときに新しいファイルを見分けるのに使う。
+ */
+function fileName(kind: 'img' | 'audio', ext: string): string {
+  return `${kind}-t${Date.now().toString(36)}-${newId()}.${ext}`;
+}
+
+/** ファイル名から作成時刻を取り出す。時刻が入っていない古い形式は 0（十分古い扱い） */
+function fileTime(path: string): number {
+  const m = /\/(?:img|audio)-t([0-9a-z]+)-/.exec(path);
+  return m ? parseInt(m[1], 36) : 0;
+}
+
+/**
+ * どのコマからも使われていない画像と、差し替えで不要になった音源を置き場から消す。
+ * コンテを開いた直後（取り消しの履歴がないとき）にだけ呼ぶ。
+ */
+async function cleanupFiles(projectId: string): Promise<void> {
+  try {
+    const paths = await getStore().listFiles(projectId);
+    // 一覧を取っている間に貼られた画像も守れるよう、使用中の判定は今の状態で行う
+    const p = useEditor.getState().project;
+    if (!p || p.id !== projectId) return;
+    const used = new Set<string>();
+    if (p.audio) used.add(p.audio.path);
+    for (const c of p.cuts) {
+      for (const it of c.items) if (it.kind === 'image') used.add(it.path);
+    }
+    const now = Date.now();
+    const stale = paths.filter(
+      (path) =>
+        /\/(?:img|audio)-/.test(path) && !used.has(path) && now - fileTime(path) > KEEP_NEW_MS,
+    );
+    if (stale.length > 0) await getStore().removeFiles(stale);
+  } catch (e) {
+    // 掃除に失敗しても編集には影響しないので、記録だけ残す
+    console.warn(e);
+  }
+}
+
 function setProject(fn: (p: Project) => Project): void {
   const p = useEditor.getState().project;
   if (!p) return;
@@ -106,6 +150,7 @@ export async function openProject(id: string): Promise<void> {
     useEditor.setState({ project: p, loadState: 'ready', time: 0 });
     if (renumber) p.cuts.forEach((c) => markCut(c.id));
     void loadAudio(p);
+    void cleanupFiles(p.id);
   } catch (e) {
     if (mine !== session) return;
     useEditor.setState({ loadState: 'error', loadError: errorText(e) });
@@ -340,7 +385,7 @@ export async function importAudio(file: File): Promise<void> {
     useEditor.setState({ busy: { label: '音源を保存中', ratio: 1 } });
     const path = await getStore().uploadFile(
       p0.id,
-      `audio-${newId()}.${prepared.ext}`,
+      fileName('audio', prepared.ext),
       prepared.blob,
     );
     primeBlob(path, prepared.blob);
@@ -383,7 +428,7 @@ export async function addImage(blob: Blob, at?: { x: number; y: number }): Promi
     const prepared = await prepareImage(blob);
     const path = await getStore().uploadFile(
       p0.id,
-      `img-${newId()}.${prepared.ext}`,
+      fileName('img', prepared.ext),
       prepared.blob,
     );
     primeBlob(path, prepared.blob);
